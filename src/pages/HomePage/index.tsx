@@ -1,7 +1,34 @@
-import React from "react";
+import { Button } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
-const HomePage = () => {
-  return <div className="flex text-base"> This is the Home Page</div>;
+export const HomePage = () => {
+  const navigate = useNavigate();
+
+  return (
+    <>
+      <div
+        style={{
+          display: "flex",
+          height: "85vh",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: "column",
+          gap: "16px",
+        }}
+      >
+        THERE IS NOTHING HERE...!!!
+        <Button
+          variant="contained"
+          type="button"
+          size="large"
+          onClick={() => navigate("/products")}
+          sx={{
+            borderRadius: "50px",
+          }}
+        >
+          GO TO PRODUCT LIST PAGE
+        </Button>
+      </div>
+    </>
+  );
 };
-
-export default HomePage;
