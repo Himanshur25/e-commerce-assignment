@@ -70,6 +70,7 @@ export default function ColumnGroupingTable() {
 
   const [data, setData] = useState<Data[]>([]);
   const [page, setPage] = useState(0);
+  console.log("🚀 ~ ColumnGroupingTable ~ page:", page);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchedText, setSearchedText] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
