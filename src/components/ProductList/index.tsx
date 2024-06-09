@@ -18,6 +18,7 @@ import {
   InputLabel,
   SelectChangeEvent,
   CircularProgress,
+  Slider,
 } from "@mui/material";
 import { Clear, SearchOutlined } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
@@ -62,13 +63,15 @@ interface Data {
   image: string;
 }
 
-export default function ProductList() {
+export default function ColumnGroupingTable() {
   const [data, setData] = useState<Data[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchedText, setSearchedText] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [priceRange, setPriceRange] = useState<number[]>([0, 1000]);
+  const [sortOption, setSortOption] = useState<string>("price-asc");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -100,23 +103,48 @@ export default function ProductList() {
     setSelectedCategory(event.target.value as string);
   };
 
-  const filteredData = data.filter((item) => {
-    const matchesTitle = item.title
-      .toLowerCase()
-      .includes(searchedText.toLowerCase());
-    const matchesCategory =
-      selectedCategory === "All" || item.category === selectedCategory;
-    return matchesTitle && matchesCategory;
-  });
+  const handlePriceRangeChange = (
+    event: Event,
+    newValue: number | number[]
+  ) => {
+    setPriceRange(newValue as number[]);
+  };
+
+  const handleSortOptionChange = (event: SelectChangeEvent<string>) => {
+    setSortOption(event.target.value as string);
+  };
+
+  const filteredData = data
+    .filter((item) => {
+      const matchesTitle = item.title
+        .toLowerCase()
+        .includes(searchedText.toLowerCase());
+      const matchesCategory =
+        selectedCategory === "All" || item.category === selectedCategory;
+      const matchesPrice =
+        item.price >= priceRange[0] && item.price <= priceRange[1];
+      return matchesTitle && matchesCategory && matchesPrice;
+    })
+    .sort((a, b) => {
+      switch (sortOption) {
+        case "price-asc":
+          return a.price - b.price;
+        case "price-desc":
+          return b.price - a.price;
+        case "popularity":
+          return b.rating.count - a.rating.count;
+        default:
+          return 0;
+      }
+    });
 
   return (
     <Box sx={{ margin: 4 }}>
       <Typography
-        variant="h4"
         component="div"
         align="center"
         gutterBottom
-        sx={{ marginBottom: 4 }}
+        sx={{ marginBottom: 4, fontSize: 30 }}
       >
         Product Fetching Information
       </Typography>
@@ -126,6 +154,7 @@ export default function ProductList() {
           display: "flex",
           justifyContent: "space-between",
           marginBottom: 2,
+          flexWrap: "wrap",
         }}
       >
         <FormControl
@@ -133,6 +162,7 @@ export default function ProductList() {
           size="small"
           sx={{
             width: 180,
+            marginRight: 2,
           }}
         >
           <InputLabel>Category</InputLabel>
@@ -151,7 +181,35 @@ export default function ProductList() {
             )}
           </Select>
         </FormControl>
-
+        <FormControl variant="outlined" size="small" sx={{ width: 180 }}>
+          <InputLabel>Sort By</InputLabel>
+          <Select
+            value={sortOption}
+            onChange={handleSortOptionChange}
+            label="Sort By"
+          >
+            <MenuItem value="price-asc">Price: Low to High</MenuItem>
+            <MenuItem value="price-desc">Price: High to Low</MenuItem>
+            <MenuItem value="popularity">Popularity</MenuItem>
+          </Select>
+        </FormControl>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <Typography
+            sx={{
+              width: 200,
+            }}
+            gutterBottom
+          >
+            Price Range
+          </Typography>
+          <Slider
+            value={priceRange}
+            onChange={handlePriceRangeChange}
+            valueLabelDisplay="auto"
+            min={0}
+            max={1000}
+          />
+        </Box>
         <OutlinedInput
           placeholder="Search"
           value={searchedText}
@@ -163,6 +221,7 @@ export default function ProductList() {
               <Clear fontSize="small" />
             </IconButton>
           }
+          sx={{ marginRight: 2 }}
         />
       </Box>
 
