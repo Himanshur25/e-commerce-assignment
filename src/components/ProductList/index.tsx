@@ -298,6 +298,7 @@ export default function ColumnGroupingTable() {
                         tabIndex={-1}
                         key={row.id}
                         sx={{ cursor: "pointer" }}
+                        onClick={() => navigate(`/product/${row.id}`)}
                       >
                         {columns.map((column) => {
                           const value =
@@ -321,7 +322,12 @@ export default function ColumnGroupingTable() {
                           );
                         })}
                         <TableCell align="right">
-                          <IconButton onClick={() => addToCart(row)}>
+                          <IconButton
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              addToCart(row);
+                            }}
+                          >
                             <AddShoppingCart />
                           </IconButton>
                         </TableCell>
