@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   Paper,
   Table,
@@ -22,6 +22,10 @@ import {
 } from "@mui/material";
 import { Clear, SearchOutlined } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import {
+  GlobalContext,
+  type IGlobalContext,
+} from "../providers/GlobalProvider";
 
 interface Column {
   id: "title" | "price" | "description" | "category" | "rating" | "image";
@@ -64,6 +68,7 @@ interface Data {
 }
 
 export default function ColumnGroupingTable() {
+  const { showAlert } = useContext(GlobalContext) as IGlobalContext;
   const [data, setData] = useState<Data[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
@@ -81,6 +86,10 @@ export default function ColumnGroupingTable() {
       .then((json) => {
         setData(json);
         setLoading(false);
+        showAlert({
+          message: "List Fetched Successfully",
+          type: "success",
+        });
       });
   }, []);
 
