@@ -35,4 +35,9 @@ This is a React application that fetches product information from the [Fake Stor
 
    ```bash
    npm start
+
+ Checkout the live demo here
+   
+  ```bash
+  https://e-commerce-assignment-cq9alxgoj-himanshur25s-projects.vercel.app/
    
