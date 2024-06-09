@@ -1,0 +1,10 @@
+stages:
+  - test
+
+test:
+  stage: test
+  image: node:18.20.0
+  script:
+    - npm install
+    - npm build
+    - npm test
