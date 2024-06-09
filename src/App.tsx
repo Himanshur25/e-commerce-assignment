@@ -4,6 +4,7 @@ import { HomePage } from "./pages/HomePage";
 import ProductListPage from "./pages/ProductListPage";
 import ProductDetailsPage from "./pages/ProductDetailsPage";
 import GlobalProvider from "./components/providers/GlobalProvider";
+import CartPage from "./pages/CartPage";
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/product" element={<ProductListPage />} />
           <Route path="/product/:id" element={<ProductDetailsPage />} />
+          <Route path="/cart" element={<CartPage />} />
 
           <Route
             path="*"

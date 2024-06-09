@@ -17,15 +17,13 @@ import {
   FormControl,
   InputLabel,
   SelectChangeEvent,
+  Button,
   CircularProgress,
   Slider,
 } from "@mui/material";
-import { Clear, SearchOutlined } from "@mui/icons-material";
+import { Clear, SearchOutlined, AddShoppingCart } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import {
-  GlobalContext,
-  type IGlobalContext,
-} from "../providers/GlobalProvider";
+import { GlobalContext, IGlobalContext } from "../providers/GlobalProvider";
 
 interface Column {
   id: "title" | "price" | "description" | "category" | "rating" | "image";
@@ -69,28 +67,28 @@ interface Data {
 
 export default function ColumnGroupingTable() {
   const { showAlert } = useContext(GlobalContext) as IGlobalContext;
+
   const [data, setData] = useState<Data[]>([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchedText, setSearchedText] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [priceRange, setPriceRange] = useState<number[]>([0, 1000]);
-  const [sortOption, setSortOption] = useState<string>("price-asc");
+  const [sortOption, setSortOption] = useState<string>("");
+  const [cartItemCount, setCartItemCount] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    setLoading(true);
     fetch("https://fakestoreapi.com/products")
       .then((res) => res.json())
       .then((json) => {
         setData(json);
         setLoading(false);
-        showAlert({
-          message: "List Fetched Successfully",
-          type: "success",
-        });
       });
+
+    const currentCart = JSON.parse(localStorage.getItem("cart") || "[]");
+    setCartItemCount(currentCart.length);
   }, []);
 
   const handleChangePage = (event: unknown, newPage: number) => {
@@ -123,6 +121,17 @@ export default function ColumnGroupingTable() {
     setSortOption(event.target.value as string);
   };
 
+  const addToCart = (product: Data) => {
+    const currentCart = JSON.parse(localStorage.getItem("cart") || "[]");
+    const updatedCart = [...currentCart, product];
+    localStorage.setItem("cart", JSON.stringify(updatedCart));
+    setCartItemCount(updatedCart.length);
+    showAlert({
+      message: "Item Added to cart Successfully",
+      type: "success",
+    });
+  };
+
   const filteredData = data
     .filter((item) => {
       const matchesTitle = item.title
@@ -130,9 +139,10 @@ export default function ColumnGroupingTable() {
         .includes(searchedText.toLowerCase());
       const matchesCategory =
         selectedCategory === "All" || item.category === selectedCategory;
-      const matchesPrice =
+      const matchesPriceRange =
         item.price >= priceRange[0] && item.price <= priceRange[1];
-      return matchesTitle && matchesCategory && matchesPrice;
+
+      return matchesTitle && matchesCategory && matchesPriceRange;
     })
     .sort((a, b) => {
       switch (sortOption) {
@@ -150,12 +160,21 @@ export default function ColumnGroupingTable() {
   return (
     <Box sx={{ margin: 4 }}>
       <Typography
+        variant="h4"
         component="div"
         align="center"
         gutterBottom
-        sx={{ marginBottom: 4, fontSize: 30 }}
+        sx={{ marginBottom: 4 }}
       >
         Product Fetching Information
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => navigate("/cart")}
+          sx={{ marginBottom: 2, float: "right" }}
+        >
+          Go to Cart ({cartItemCount})
+        </Button>
       </Typography>
 
       <Box
@@ -163,7 +182,6 @@ export default function ColumnGroupingTable() {
           display: "flex",
           justifyContent: "space-between",
           marginBottom: 2,
-          flexWrap: "wrap",
         }}
       >
         <FormControl
@@ -171,7 +189,6 @@ export default function ColumnGroupingTable() {
           size="small"
           sx={{
             width: 180,
-            marginRight: 2,
           }}
         >
           <InputLabel>Category</InputLabel>
@@ -190,7 +207,12 @@ export default function ColumnGroupingTable() {
             )}
           </Select>
         </FormControl>
-        <FormControl variant="outlined" size="small" sx={{ width: 180 }}>
+
+        <FormControl
+          variant="outlined"
+          size="small"
+          sx={{ width: 180, marginLeft: 2 }}
+        >
           <InputLabel>Sort By</InputLabel>
           <Select
             value={sortOption}
@@ -202,22 +224,22 @@ export default function ColumnGroupingTable() {
             <MenuItem value="popularity">Popularity</MenuItem>
           </Select>
         </FormControl>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 4 }}>
-          <Typography
-            sx={{
-              width: 200,
-            }}
-            gutterBottom
-          >
-            Price Range
-          </Typography>
-          <Slider
-            value={priceRange}
-            onChange={handlePriceRangeChange}
-            valueLabelDisplay="auto"
-            min={0}
-            max={1000}
-          />
+        <Box>
+          <FormControl sx={{ display: "flex", flexDirection: "row", gap: 2 }}>
+            <Typography
+              gutterBottom
+              sx={{
+                width: 200,
+              }}
+            >
+              Price Range
+            </Typography>
+            <Slider
+              value={priceRange}
+              onChange={handlePriceRangeChange}
+              max={1000}
+            />
+          </FormControl>
         </Box>
         <OutlinedInput
           placeholder="Search"
@@ -230,7 +252,6 @@ export default function ColumnGroupingTable() {
               <Clear fontSize="small" />
             </IconButton>
           }
-          sx={{ marginRight: 2 }}
         />
       </Box>
 
@@ -248,56 +269,65 @@ export default function ColumnGroupingTable() {
                     {column.label}
                   </TableCell>
                 ))}
+                <TableCell align="right" style={{ fontWeight: "bold" }}>
+                  Actions
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={columns.length} align="center">
+                  <TableCell colSpan={columns.length + 1} align="center">
                     <CircularProgress />
                   </TableCell>
                 </TableRow>
               ) : filteredData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={columns.length} align="center">
+                  <TableCell colSpan={columns.length + 1} align="center">
                     No data found
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredData
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                  .map((row) => (
-                    <TableRow
-                      hover
-                      role="checkbox"
-                      tabIndex={-1}
-                      key={row.id}
-                      onClick={() => navigate(`/product/${row.id}`)}
-                      sx={{ cursor: "pointer" }}
-                    >
-                      {columns.map((column) => {
-                        const value =
-                          column.id === "rating"
-                            ? row.rating.rate
-                            : row[column.id];
-                        return (
-                          <TableCell key={column.id} align={column.align}>
-                            {column.id === "image" ? (
-                              <img
-                                src={row.image}
-                                alt={row.title}
-                                style={{ width: 50, height: 50 }}
-                              />
-                            ) : column.format && typeof value === "number" ? (
-                              column.format(value)
-                            ) : (
-                              value
-                            )}
-                          </TableCell>
-                        );
-                      })}
-                    </TableRow>
-                  ))
+                  .map((row) => {
+                    return (
+                      <TableRow
+                        hover
+                        role="checkbox"
+                        tabIndex={-1}
+                        key={row.id}
+                        sx={{ cursor: "pointer" }}
+                      >
+                        {columns.map((column) => {
+                          const value =
+                            column.id === "rating"
+                              ? row.rating.rate
+                              : row[column.id];
+                          return (
+                            <TableCell key={column.id} align={column.align}>
+                              {column.id === "image" ? (
+                                <img
+                                  src={row.image}
+                                  alt={row.title}
+                                  style={{ width: 50, height: 50 }}
+                                />
+                              ) : column.format && typeof value === "number" ? (
+                                column.format(value)
+                              ) : (
+                                value
+                              )}
+                            </TableCell>
+                          );
+                        })}
+                        <TableCell align="right">
+                          <IconButton onClick={() => addToCart(row)}>
+                            <AddShoppingCart />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
               )}
             </TableBody>
           </Table>
