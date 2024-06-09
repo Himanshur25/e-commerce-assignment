@@ -21,6 +21,7 @@ export const HomePage = () => {
           variant="contained"
           type="button"
           size="large"
+          data-testid="button"
           onClick={() => navigate("/product")}
           sx={{
             borderRadius: "50px",
